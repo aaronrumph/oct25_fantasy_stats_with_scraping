@@ -6,6 +6,8 @@ import pandas as pd
 import xlsxwriter
 from io import StringIO
 
+from numpy.f2py.crackfortran import word_pattern
+
 from constants import standings_directory
 
 # basic useful information
@@ -38,8 +40,6 @@ for player in players:
         seasons = 8
     number_of_seasons[player] = seasons
 
-print(league_set_up)
-
 # dataframe representing all stats for the league
 fantasy_df = pd.read_excel("fantasy_league_stats.xlsx")
 
@@ -49,15 +49,11 @@ def get_year_rows(year, df):
     year_index = years[years == year].index.tolist()[0] # index of year row (is at the top row for each season)
     num_matchups = league_set_up[year]["teams"] // 2  # number of matchups per week = no. players/2
     return list(range(year_index, year_index + num_matchups)) # returns list of indices for the rows that make up the season
-print(get_year_rows(2018, fantasy_df))
-
-
 
 
 def extract_reg_matchup_data(df):
     player_scores_dict = {player: {} for player in players}
     player_opponents_dict = {player: {} for player in players}
-
 
     for year, set_up in league_set_up.items():
         year_rows = get_year_rows(year, df)
@@ -96,8 +92,6 @@ def extract_reg_matchup_data(df):
                     opp_idx = (idx + num_matchups) % teams
                     player_opponents_dict[player][year][f"Week{week}"] = matchups[opp_idx]
     return player_scores_dict, player_opponents_dict
-
-print(extract_reg_matchup_data(fantasy_df)[1]["Rockmael"])
 
 def extract_postseason_matchup_data(df):
     player_scores_dict = {player: {} for player in players}
@@ -139,7 +133,7 @@ def extract_postseason_matchup_data(df):
                     player_opponents_dict[player][year][f"Week{week}"] = "NA"
     return player_scores_dict, player_opponents_dict
 
-print(extract_postseason_matchup_data(fantasy_df)[1])
+
 
 def calculate_reg_records(df):
     # returns a list of dictionaries: [h2h_records, h2h_scores, yearly_records, weekly_records]
@@ -192,8 +186,6 @@ def calculate_reg_records(df):
                     yearly_records[player][year][2] += 1
                 weekly_records[player][year][week] = [yearly_records[player][year][0], yearly_records[player][year][1], yearly_records[player][year][2]]
     return h2h_records, h2h_scores, yearly_records, weekly_records, h2h_count_reg
-
-print(calculate_reg_records(fantasy_df)[3])
 
 def create_standings(df):
     # returns a dictionary standings_dictionary
@@ -265,8 +257,6 @@ def create_standings(df):
             raise Exception("Missing KSaxe")
     return standings_dictionary
 
-print(create_standings(fantasy_df))
-
 def calculate_playoff_makes_misses(df):
     made_playoffs_dict = {player: {} for player in players}
     made_consolation_bracket_dict = {player: {} for player in players}
@@ -274,15 +264,18 @@ def calculate_playoff_makes_misses(df):
     standings = create_standings(df)
     for player in players:
         for year in range(2014,2025):
-            made_playoffs_dict[player][year] = False
-            made_consolation_bracket_dict[player][year] = False
-            made_losers_bowl_dict[player][year] = False
-            if standings[year][player]["RegularSeasonRank"] >= 4:
-                made_playoffs_dict[player][year] = True
-            elif standings[year][player]["RegularSeasonRank"] >= 8:
-                made_consolation_bracket_dict[player][year] = True
-            else:
-                made_losers_bowl_dict[player][year] = True
+
+        # have to check whether player is in standings for year to avoid error from rockmaels
+            if player in standings[year]:
+                made_playoffs_dict[player][year] = False
+                made_consolation_bracket_dict[player][year] = False
+                made_losers_bowl_dict[player][year] = False
+                if standings[year][player]["RegularSeasonRank"] >= 4:
+                    made_playoffs_dict[player][year] = True
+                elif standings[year][player]["RegularSeasonRank"] >= 8:
+                    made_consolation_bracket_dict[player][year] = True
+                else:
+                    made_losers_bowl_dict[player][year] = True
     return made_playoffs_dict, made_consolation_bracket_dict, made_losers_bowl_dict
 
 def calculate_playoff_records(df):
@@ -311,8 +304,8 @@ def calculate_playoff_records(df):
                     player_score = player_scores_dict[player][year][week]
                     opp_score = player_scores_dict[opponent][year][week]
                 # load scores into h2h scores dict
-                    h2h_scores[player][opponent][0] += player_score
-                    h2h_scores[player][opponent][1] += opp_score
+                    h2h_scores_playoffs[player][opponent][0] += player_score
+                    h2h_scores_playoffs[player][opponent][1] += opp_score
                     h2h_count_playoffs[player][opponent] += 1
     
                 # determine who won and update h2h records dict and records dicts accordingly
@@ -353,8 +346,8 @@ def calculate_postseason_records(df):
                     player_score = player_scores_dict[player][year][week]
                     opp_score = player_scores_dict[opponent][year][week]
                     # load scores into h2h scores dict
-                    h2h_scores[player][opponent][0] += player_score
-                    h2h_scores[player][opponent][1] += opp_score
+                    h2h_scores_postseason[player][opponent][0] += player_score
+                    h2h_scores_postseason[player][opponent][1] += opp_score
                     h2h_count_postseason[player][opponent] += 1
 
                     # determine who won and update h2h records dict and records dicts accordingly
@@ -373,6 +366,10 @@ def calculate_postseason_records(df):
 
 
 def calculate_reg_averages(df):
+    # returns avg_score_h2h, avg_score_season, avg_score_career, total_games
+    # [0] = avg_score_h2h format: avg_score_h2h[player][opponent] = [points_for, points_against]
+    # [1] = avg_score_season: avg_score_h2h[player][year] = [points_for, points_against]
+
     # calculating point records
     reg_records = calculate_reg_records(df)
     extracted_reg = extract_reg_matchup_data(df)
@@ -416,123 +413,83 @@ print(calculate_reg_averages(fantasy_df))
 
 
 
-def find_extreme_scores(player_scores, player_opponents):
-    """Find the highest and lowest scores."""
+def find_extreme_scores(df):
+    # twenty_five_highest_scores_overall, twenty_five_lowest_scores_overall in form: [{"score": score,"player": player,"opponent": opponent, "week": week,"year": year},...]
+    # ten_highest_playoff_scores and ten_lowest_playoff_scores in form [{"score": score,"player": player,"opponent": opponent, "week": week,"year": year},...]
+    # player_outlier_scores in form: {player: [{"score": score,"player": player,"opponent": opponent, "week": week,"year": year},...]}
+    # 0 = 25_highest, 1 = 25_lowest, 2 = 10_highest, 3 = 10_lowest, 4 = player_outlier_scores
+
+# add all scores to a list
     all_scores = []
-
-    for player in player_scores:
-        for year in player_scores[player]:
-            for week, score in player_scores[player][year].items():
-                opponent = player_opponents[player][year].get(week)
-                all_scores.append({
-                    'score': score,
-                    'player': player,
-                    'opponent': opponent,
-                    'week': week,
-                    'year': year
-                })
-
-    sorted_scores = sorted(all_scores, key=lambda x: x['score'])
-    return sorted_scores[:10], sorted_scores[-10:][::-1]
+    all_scores_per_player = {player:[] for player in players}
+    all_playoff_scores = []
+# get external sources
+    reg_season_scores =  extract_reg_matchup_data(df)[0]
+    post_season_scores = extract_postseason_matchup_data(df)[0]
+    reg_season_opponents = extract_reg_matchup_data(df)[1]
+    post_season_opponents = extract_postseason_matchup_data(df)[1]
+    made_playoffs_dict = calculate_playoff_makes_misses(df)[0]
 
 
-def write_excel(h2h_records, h2h_scores, avg_scores, yearly_records, low_scores, high_scores,
-                filename='fantasy_stats_output.xlsx'):
-    """Write all statistics to Excel file."""
-    workbook = xlsxwriter.Workbook(filename)
-    fmt_black = workbook.add_format({'bg_color': '#000000', 'font_color': '#000000'})
-    fmt_center = workbook.add_format({'align': 'center', 'valign': 'vcenter'})
-
-    sorted_PLAYERS = sorted(players)
-    mapped_names = [NAME_MAPPING[p] for p in sorted_PLAYERS]
-
-    # Sheet 1: Head-to-Head Records
-    ws1 = workbook.add_worksheet('H2H Records')
-    ws1.set_column_pixels(0, 15, 90, fmt_center)
-    for i in range(15):
-        ws1.set_row_pixels(i, 90, fmt_center)
-
-    for i, name in enumerate(mapped_names):
-        ws1.write(i + 1, 0, name)
-        ws1.write(0, i + 1, name)
-
-    for i, p1 in enumerate(sorted_PLAYERS):
-        for j, p2 in enumerate(sorted_PLAYERS):
-            if p1 == p2:
-                ws1.write(i + 1, j + 1, 0)
-            else:
-                rec = h2h_records[p1][p2]
-                ws1.write(i + 1, j + 1, f"{rec[0]}-{rec[1]}-{rec[2]}")
-
-    ws1.conditional_format('A1:K11', {'type': 'cell', 'criteria': '=', 'value': 0, 'format': fmt_black})
-
-    # Sheet 2: Average Scores
-    ws2 = workbook.add_worksheet('H2H Avg Scores')
-    ws2.set_column_pixels(0, 15, 90, fmt_center)
-    for i in range(15):
-        ws2.set_row_pixels(i, 90, fmt_center)
-
-    for i, name in enumerate(mapped_names):
-        ws2.write(i + 1, 0, name)
-        ws2.write(0, i + 1, name)
-
-    for i, p1 in enumerate(sorted_PLAYERS):
-        for j, p2 in enumerate(sorted_PLAYERS):
-            if p1 == p2:
-                ws2.write(i + 1, j + 1, 0)
-            else:
-                games = sum(h2h_records[p1][p2])
-                if games > 0:
-                    avg_pf = h2h_scores[p1][p2][0] / games
-                    avg_pa = h2h_scores[p1][p2][1] / games
-                    ws2.write(i + 1, j + 1, f"{avg_pf:.2f} - {avg_pa:.2f}")
-
-    ws2.conditional_format('A1:K11', {'type': 'cell', 'criteria': '=', 'value': 0, 'format': fmt_black})
-
-    # Sheet 3: Overall Stats
-    ws3 = workbook.add_worksheet('Overall Stats')
-    ws3.set_column_pixels(0, 5, 90, fmt_center)
-    headers = ['Player', 'Record', 'Win %', 'Avg PF', 'Avg PA']
-    for i, h in enumerate(headers):
-        ws3.write(0, i, h)
-
-    for i, player in enumerate(sorted_PLAYERS):
-        total_w = sum(h2h_records[player][opp][0] for opp in h2h_records[player])
-        total_l = sum(h2h_records[player][opp][1] for opp in h2h_records[player])
-        total_t = sum(h2h_records[player][opp][2] for opp in h2h_records[player])
-        total_games = total_w + total_l + total_t
-
-        ws3.write(i + 1, 0, NAME_MAPPING[player])
-        ws3.write(i + 1, 1, f"{total_w}-{total_l}-{total_t}")
-        ws3.write(i + 1, 2, round((total_w * 2 + total_t) / (2 * total_games), 3) if total_games > 0 else 0)
-        ws3.write(i + 1, 3, round(avg_scores[player][0], 2))
-        ws3.write(i + 1, 4, round(avg_scores[player][1], 2))
-
-    # Sheets 4 & 5: High/Low Scores
-    for ws, scores, title in [(workbook.add_worksheet('High Scores'), high_scores, 'High'),
-                              (workbook.add_worksheet('Low Scores'), low_scores, 'Low')]:
-        ws.set_column_pixels(0, 6, 90, fmt_center)
-        headers = ['Rank', 'Score', 'Player', 'Opponent', 'Week', 'Year']
-        for i, h in enumerate(headers):
-            ws.write(0, i, h)
-
-        for i, data in enumerate(scores):
-            ws.write(i + 1, 0, i + 1)
-            ws.write(i + 1, 1, data['score'])
-            ws.write(i + 1, 2, NAME_MAPPING[data['player']])
-            ws.write(i + 1, 3, NAME_MAPPING.get(data['opponent'], 'N/A'))
-            ws.write(i + 1, 4, data['week'])
-            ws.write(i + 1, 5, data['year'])
-
-    workbook.close()
-    print(f"Stats written to {filename}")
+    for player in reg_season_scores:
+        for year in reg_season_scores[player]:
+            for week, score in reg_season_scores[player][year].items():
+                opponent = reg_season_opponents[player][year].get(week)
+                all_scores.append({"score": score,"player": player,"opponent": opponent,"week": week,"year": year})
+                all_scores_per_player[player].append({"score": score,"player": player,"opponent": opponent,"week": week,"year": year})
+    for player in post_season_scores:
+        for year in post_season_scores[player]:
+            for week, score in post_season_scores[player][year].items():
+                if score == "NA":
+                    continue
+                opponent = post_season_opponents[player][year].get(week)
+                all_scores.append({"score": score, "player": player, "opponent": opponent, "week": week, "year": year})
+                all_scores_per_player[player].append(
+                    {"score": score, "player": player, "opponent": opponent, "week": week, "year": year})
+            # check if player made playoffs to see if this is a playoff score
+                if made_playoffs_dict[player][year]:
+                    all_playoff_scores.append({"score": score, "player": player, "opponent": opponent, "week": week, "year": year})
 
 
-# Main execution
-if __name__ == "__main__":
-    df = load_data('fantasy_league_stats.xlsx')
-    player_scores, player_opponents = extract_matchup_data(df)
-    h2h_records, h2h_scores, yearly_records = calculate_head_to_head(player_scores, player_opponents)
-    avg_scores, total_games = calculate_averages(h2h_records, h2h_scores)
-    low_scores, high_scores = find_extreme_scores(player_scores, player_opponents)
-    write_excel(h2h_records, h2h_scores, avg_scores, yearly_records, low_scores, high_scores)
+
+    sorted_scores = sorted(all_scores, key=lambda x: x["score"], reverse=True)
+    twenty_five_highest_scores_overall = sorted_scores[:25]
+    twenty_five_lowest_scores_overall = sorted_scores[-25:]
+    ten_highest_playoff_scores = sorted(all_playoff_scores, key=lambda x: x["score"],reverse=True)[:10]
+    ten_lowest_playoff_scores = sorted(all_playoff_scores, key=lambda x: x["score"], reverse=True)[-10:]
+    player_outlier_scores = {player: [sorted(all_scores_per_player[player], key=lambda x: x["score"],reverse=True)[:10], sorted(all_scores_per_player[player], key=lambda x: x["score"],reverse=True)[-10:]] for player in players}
+
+
+    return twenty_five_highest_scores_overall, twenty_five_lowest_scores_overall, ten_highest_playoff_scores, ten_lowest_playoff_scores, player_outlier_scores
+
+print(find_extreme_scores(fantasy_df)[4]["Aaron"])
+print(extract_postseason_matchup_data(fantasy_df)[0]["Oliver"][2024]["Week17"])
+
+# !! # COMPLETE UNTIL HERE # !! #
+
+
+# create workbook #
+workbook = xlsxwriter.Workbook("fantasy_league_stats_new_output.xlsx")
+# formatting #
+fmt_black = workbook.add_format({'bg_color': '#000000', 'font_color': '#000000'})
+fmt_center = workbook.add_format({'align': 'center', 'valign': 'vcenter'})
+# making it so displays presentable names instead of database names (Kevin R instead of Rockmael) #
+sorted_players = sorted(players)
+mapped_names = [name_mapping[player] for player in sorted_players]
+
+# sheet 1: overall record #
+
+# formatting
+ws1 = workbook.add_worksheet("Record by Year")
+ws1.set_column_pixels(0, 15, 48, fmt_center)
+for i in range(15):
+    ws1.set_row_pixels(i, 24, fmt_center)
+
+for i, name in enumerate(mapped_names):
+    ws1.write(0, i + 1, name)
+
+for i, year in enumerate(range(2014, 2025)):
+    ws1.write(i + 1, 0, f"{year}")
+
+workbook.close()
+

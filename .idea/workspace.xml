@@ -4,20 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="fb2f7418-df0e-4c0a-bdd6-d4a00b336bb9" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/oct25_fantasy_stats_with_scraping.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/constants.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/cookie_string.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/fantasy_league_stats_manual_analysis.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/scrape_game_center.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/scrape_standings.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/utils.py" afterDir="false" />
+    <list default="true" id="fb2f7418-df0e-4c0a-bdd6-d4a00b336bb9" name="Changes" comment="MAIN FUNCTIONAL COMMIT:&#10;current analysis module has most (if not all) the functions that I used last time, including h2h records, scores, avg scores, etc.&#10;Added playoff and postseason functions &#10;Working on roster analysis">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fantasy_league_stats.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/fantasy_league_stats.xlsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fantasy_league_stats_manual_analysis.py" beforeDir="false" afterPath="$PROJECT_DIR$/fantasy_league_stats_manual_analysis.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -34,6 +24,18 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "aaronrumph"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/aaronrumph/oct25_fantasy_stats_with_scraping.git",
+    "accountId": "de2096cd-8690-4607-b37b-c6096edf3554"
+  }
+}]]></component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 7
 }</component>
@@ -74,6 +76,23 @@
       <option name="presentableId" value="Default" />
       <updated>1759660463380</updated>
     </task>
+    <task id="LOCAL-00001" summary="MAIN FUNCTIONAL COMMIT:&#10;current analysis module has most (if not all) the functions that I used last time, including h2h records, scores, avg scores, etc.&#10;Added playoff and postseason functions &#10;Working on roster analysis">
+      <option name="closed" value="true" />
+      <created>1759688003150</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1759688003150</updated>
+    </task>
+    <task id="LOCAL-00002" summary="MAIN FUNCTIONAL COMMIT:&#10;current analysis module has most (if not all) the functions that I used last time, including h2h records, scores, avg scores, etc.&#10;Added playoff and postseason functions &#10;Working on roster analysis">
+      <option name="closed" value="true" />
+      <created>1759688113162</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1759688113162</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -87,23 +106,17 @@
       </map>
     </option>
   </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="MAIN FUNCTIONAL COMMIT:&#10;current analysis module has most (if not all) the functions that I used last time, including h2h records, scores, avg scores, etc.&#10;Added playoff and postseason functions &#10;Working on roster analysis" />
+    <option name="LAST_COMMIT_MESSAGE" value="MAIN FUNCTIONAL COMMIT:&#10;current analysis module has most (if not all) the functions that I used last time, including h2h records, scores, avg scores, etc.&#10;Added playoff and postseason functions &#10;Working on roster analysis" />
+  </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/fantasy_league_stats_manual_analysis.py</url>
-          <line>410</line>
-          <option name="timeStamp" value="7" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/fantasy_league_stats_manual_analysis.py</url>
-          <line>430</line>
-          <option name="timeStamp" value="8" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/fantasy_league_stats_manual_analysis.py</url>
-          <line>523</line>
-          <option name="timeStamp" value="9" />
+          <line>495</line>
+          <option name="timeStamp" value="21" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
