@@ -5,10 +5,10 @@ import os
 import pandas as pd
 import xlsxwriter
 from io import StringIO
-
 from numpy.f2py.crackfortran import word_pattern
-
 from constants import standings_directory
+
+# IMPORTANT: this file is up to date as of 10/05/2025
 
 # basic useful information
 players = ["Aaron", "Adam", "Jackson", "Marder", "Oliver", "Rockmael", "Saxe", "Steven", "Todd", "Whyte"]
@@ -189,7 +189,7 @@ def calculate_reg_records(df):
 
 def create_standings(df):
     # returns a dictionary standings_dictionary
-    # return format = {year:{player:{
+    # return format = {year:{player:{...
 
 # calling function here so don't have to do it over and over in loops
     yearly_records_dict = calculate_reg_records(df)[2]
@@ -269,9 +269,9 @@ def calculate_playoff_makes_misses(df):
                 made_playoffs_dict[player][year] = False
                 made_consolation_bracket_dict[player][year] = False
                 made_losers_bowl_dict[player][year] = False
-                if standings[year][player]["RegularSeasonRank"] >= 4:
+                if standings[year][player]["RegularSeasonRank"] <= 4:
                     made_playoffs_dict[player][year] = True
-                elif standings[year][player]["RegularSeasonRank"] >= 8:
+                elif standings[year][player]["RegularSeasonRank"] <= 8:
                     made_consolation_bracket_dict[player][year] = True
                 else:
                     made_losers_bowl_dict[player][year] = True
