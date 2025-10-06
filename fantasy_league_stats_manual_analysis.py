@@ -1,3 +1,5 @@
+import logging
+logging.basicConfig(level=logging.DEBUG, format='%(levelname)s: %(message)s')
 import csv
 from pickletools import stringnl_noescape
 from re import match
@@ -263,19 +265,41 @@ def calculate_playoff_makes_misses(df):
     standings = create_standings(df)
     for player in players:
         for year in range(2014,2025):
-
         # have to check whether player is in standings for year to avoid error from rockmaels
             if player in standings[year]:
                 made_playoffs_dict[player][year] = False
                 made_consolation_bracket_dict[player][year] = False
                 made_losers_bowl_dict[player][year] = False
-                if standings[year][player]["RegularSeasonRank"] <= 4:
+                if standings[year][player]["PlayoffRank"] < 5:
                     made_playoffs_dict[player][year] = True
-                elif standings[year][player]["RegularSeasonRank"] <= 8:
-                    made_consolation_bracket_dict[player][year] = True
-                else:
+                elif (year >= 2016) and standings[year][player]["PlayoffRank"] >= 9:
                     made_losers_bowl_dict[player][year] = True
-    return made_playoffs_dict, made_consolation_bracket_dict, made_losers_bowl_dict
+                elif (year < 2016) and standings[year][player]["PlayoffRank"] >= 7:
+                    made_losers_bowl_dict[player][year] = True
+                else:
+                    made_consolation_bracket_dict[player][year] = True
+# had some issues with this code so added a a check here to make sure it runs correctly
+# and adding a dictionary that will show playoffs/losers/consolation by year
+# year_postseason_outlook_dict is format {year:{0: [Playoff teams], 1: [Consolation teams], 2: [Loser Bowl teams]}
+    year_num_teams_dict = {year: [0,0,0] for year in range (2014,2025)}
+    year_postseason_outlook_dict = {year: {i: [] for i in range (0,3)} for year in range(2014, 2025)}
+    for year in range(2014,2025):
+        for player in players:
+            if (year in made_playoffs_dict[player]) and made_playoffs_dict[player][year]:
+                year_num_teams_dict[year][0] += 1
+                year_postseason_outlook_dict[year][0].append(player)
+            if (year in made_consolation_bracket_dict[player]) and made_consolation_bracket_dict[player][year]:
+                year_num_teams_dict[year][1] += 1
+                year_postseason_outlook_dict[year][1].append(player)
+            if (year in made_losers_bowl_dict[player]) and made_losers_bowl_dict[player][year]:
+                year_num_teams_dict[year][2] += 1
+                year_postseason_outlook_dict[year][2].append(player)
+        if year_num_teams_dict[year][2] != 2:
+            raise Exception("Must have two losers bowl temas")
+        if year_num_teams_dict[year][0] != 4:
+            raise Exception("Must have four playoff bowl teams")
+
+    return made_playoffs_dict, made_consolation_bracket_dict, made_losers_bowl_dict, year_postseason_outlook_dict
 
 def calculate_playoff_records(df):
 
@@ -320,7 +344,6 @@ def calculate_playoff_records(df):
                         record_in_playoffs[player][1] += 1
     return record_in_playoffs, h2h_record_playoffs, h2h_scores_playoffs, h2h_count_playoffs
 
-
 def calculate_postseason_records(df):
     record_in_postseason = {player: [0, 0, 0] for player in players}
     h2h_record_postseason = {player: {} for player in players}
@@ -361,8 +384,6 @@ def calculate_postseason_records(df):
                         h2h_record_postseason[player][opponent][1] += 1
                         record_in_postseason[player][1] += 1
     return record_in_postseason, h2h_record_postseason, h2h_scores_postseason, h2h_count_postseason
-        
-
 
 def calculate_reg_averages(df):
     # returns avg_score_h2h, avg_score_season, avg_score_career, total_games
@@ -419,7 +440,10 @@ def find_extreme_scores(df):
 # add all scores to a list
     all_scores = []
     all_scores_per_player = {player:[] for player in players}
+    all_differences_per_player = {player: [] for player in players}
     all_playoff_scores = []
+    all_score_differences = []
+    all_playoff_difference = []
 # get external sources
     reg_season_scores =  extract_reg_matchup_data(df)[0]
     post_season_scores = extract_postseason_matchup_data(df)[0]
@@ -433,7 +457,10 @@ def find_extreme_scores(df):
             for week, score in reg_season_scores[player][year].items():
                 opponent = reg_season_opponents[player][year].get(week)
                 all_scores.append({"score": score,"player": player,"opponent": opponent,"week": week,"year": year})
+                all_score_differences.append({"margin": score - reg_season_scores[opponent][year][week], "player": player, "opponent": opponent, "week": week, "year": year})
                 all_scores_per_player[player].append({"score": score,"player": player,"opponent": opponent,"week": week,"year": year})
+                all_differences_per_player[player].append(
+                    {"margin": score - reg_season_scores[opponent][year][week], "player": player, "opponent": opponent, "week": week, "year": year})
     for player in post_season_scores:
         for year in post_season_scores[player]:
             for week, score in post_season_scores[player][year].items():
@@ -441,23 +468,30 @@ def find_extreme_scores(df):
                     continue
                 opponent = post_season_opponents[player][year].get(week)
                 all_scores.append({"score": score, "player": player, "opponent": opponent, "week": week, "year": year})
+                all_score_differences.append({"margin": score - post_season_scores[opponent][year][week], "player": player, "opponent": opponent, "week": week, "year": year})
                 all_scores_per_player[player].append(
                     {"score": score, "player": player, "opponent": opponent, "week": week, "year": year})
+                all_differences_per_player[player].append(
+                    {"margin": score - post_season_scores[opponent][year][week], "player": player, "opponent": opponent, "week": week, "year": year})
             # check if player made playoffs to see if this is a playoff score
                 if made_playoffs_dict[player][year]:
                     all_playoff_scores.append({"score": score, "player": player, "opponent": opponent, "week": week, "year": year})
-
-
+                    all_playoff_difference.append({"margin": score - post_season_scores[opponent][year][week], "player": player, "opponent": opponent, "week": week, "year": year})
 
     sorted_scores = sorted(all_scores, key=lambda x: x["score"], reverse=True)
     twenty_five_highest_scores_overall = sorted_scores[:25]
     twenty_five_lowest_scores_overall = sorted_scores[-25:]
     ten_highest_playoff_scores = sorted(all_playoff_scores, key=lambda x: x["score"],reverse=True)[:10]
     ten_lowest_playoff_scores = sorted(all_playoff_scores, key=lambda x: x["score"], reverse=True)[-10:]
-    player_outlier_scores = {player: [sorted(all_scores_per_player[player], key=lambda x: x["score"],reverse=True)[:10], sorted(all_scores_per_player[player], key=lambda x: x["score"],reverse=True)[-10:]] for player in players}
+    twenty_five_largest_wins = sorted(all_score_differences, key=lambda x: x["margin"], reverse=True)[:25]
 
+    # outlier scores: {player: [Top ten scores], [Bottom ten scores], [10 largest wins], [10 largest losses]}
+    player_outlier_scores = {player: [sorted(all_scores_per_player[player], key=lambda x: x["score"],reverse=True)[:10],
+                                      sorted(all_scores_per_player[player], key=lambda x: x["score"],reverse=True)[-10:],
+                                      sorted(all_differences_per_player[player], key=lambda x: x["margin"], reverse=True)[:10],
+                                      sorted(all_differences_per_player[player], key=lambda x: x["margin"], reverse=True)[-10:]] for player in players}
 
-    return twenty_five_highest_scores_overall, twenty_five_lowest_scores_overall, ten_highest_playoff_scores, ten_lowest_playoff_scores, player_outlier_scores
+    return twenty_five_highest_scores_overall, twenty_five_lowest_scores_overall, ten_highest_playoff_scores, ten_lowest_playoff_scores, twenty_five_largest_wins, player_outlier_scores
 
 # !! # COMPLETE UNTIL HERE # !! #
 
