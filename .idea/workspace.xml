@@ -4,10 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="fb2f7418-df0e-4c0a-bdd6-d4a00b336bb9" name="Changes" comment="MAIN FUNCTIONAL COMMIT:&#10;current analysis module has most (if not all) the functions that I used last time, including h2h records, scores, avg scores, etc.&#10;Added playoff and postseason functions &#10;Working on roster analysis">
+    <list default="true" id="fb2f7418-df0e-4c0a-bdd6-d4a00b336bb9" name="Changes" comment="Done with FLS!">
+      <change afterPath="$PROJECT_DIR$/excel_output_manual_analysis.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fantasy_league_stats.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/fantasy_league_stats.xlsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/fantasy_league_stats_manual_analysis.py" beforeDir="false" afterPath="$PROJECT_DIR$/fantasy_league_stats_manual_analysis.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fantasy_league_stats_new_output.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/fantasy_league_stats_new_output.xlsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -24,18 +25,18 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "aaronrumph"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;aaronrumph&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/aaronrumph/oct25_fantasy_stats_with_scraping.git",
-    "accountId": "de2096cd-8690-4607-b37b-c6096edf3554"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/aaronrumph/oct25_fantasy_stats_with_scraping.git&quot;,
+    &quot;accountId&quot;: &quot;de2096cd-8690-4607-b37b-c6096edf3554&quot;
   }
-}]]></component>
+}</component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 7
 }</component>
@@ -47,7 +48,8 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
-    "Python.fantasy_league_stats_manual_analysis.executor": "Debug",
+    "Python.excel_output_manual_analysis.executor": "Run",
+    "Python.fantasy_league_stats_manual_analysis.executor": "Run",
     "Python.scrape_standings.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "git-widget-placeholder": "master",
@@ -92,7 +94,31 @@
       <option name="project" value="LOCAL" />
       <updated>1759688113162</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="Baically done with manual analysis module, just doing excel output now.">
+      <option name="closed" value="true" />
+      <created>1759696060368</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1759696060368</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Baically done with manual analysis module, just doing excel output now. Plus minor bug fixes">
+      <option name="closed" value="true" />
+      <created>1759696149454</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1759696149454</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Done with FLS!">
+      <option name="closed" value="true" />
+      <created>1759710194762</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1759710194762</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -108,17 +134,9 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="MAIN FUNCTIONAL COMMIT:&#10;current analysis module has most (if not all) the functions that I used last time, including h2h records, scores, avg scores, etc.&#10;Added playoff and postseason functions &#10;Working on roster analysis" />
-    <option name="LAST_COMMIT_MESSAGE" value="MAIN FUNCTIONAL COMMIT:&#10;current analysis module has most (if not all) the functions that I used last time, including h2h records, scores, avg scores, etc.&#10;Added playoff and postseason functions &#10;Working on roster analysis" />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/fantasy_league_stats_manual_analysis.py</url>
-          <line>495</line>
-          <option name="timeStamp" value="21" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
+    <MESSAGE value="Baically done with manual analysis module, just doing excel output now." />
+    <MESSAGE value="Baically done with manual analysis module, just doing excel output now. Plus minor bug fixes" />
+    <MESSAGE value="Done with FLS!" />
+    <option name="LAST_COMMIT_MESSAGE" value="Done with FLS!" />
   </component>
 </project>
