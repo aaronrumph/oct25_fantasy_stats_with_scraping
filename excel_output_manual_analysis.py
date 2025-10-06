@@ -172,6 +172,7 @@ for i, p1 in enumerate(sorted_players):
 # done
 
 
+
 # ws4: h2h scores
 
 ws4 = workbook.add_worksheet("Head to Head Scores")
