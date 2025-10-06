@@ -1,6 +1,7 @@
 import re
 from collections import Counter
-
+import logging
+logging.basicConfig(level=logging.DEBUG, format='%(levelname)s: %(message)s')
 import xlsxwriter
 import csv
 from pickletools import stringnl_noescape
@@ -29,6 +30,7 @@ fmt_black = workbook.add_format({'bg_color': '#000000', 'font_color': '#000000'}
 fmt_center = workbook.add_format({'align': 'center', 'valign': 'vcenter'})
 fmt_bold = workbook.add_format({'bold': True, 'align': 'center', 'valign': 'vcenter'})
 fmt_normal = workbook.add_format({'bold': False, 'align': 'center', 'valign': 'vcenter'})
+fmt_highlight = workbook.add_format({'bg_color': '#FFFF00', 'font_color': '#000000', 'bold': False, 'align': 'center', 'valign': 'vcenter'})
 # making it so displays presentable names instead of database names (Kevin R instead of Rockmael) #
 sorted_players = sorted(fls.players)
 mapped_names = [fls.name_mapping[player] for player in sorted_players]
@@ -36,8 +38,8 @@ name_mapping =fls.name_mapping
 df1 =fls.fantasy_df
 
 
-# ws11: overall record #
-
+# ws1: overall record #
+logging.debug("Creating worksheet 1")
 
 yearly_records = fls.calculate_reg_records(df1)[2]
 
@@ -89,7 +91,7 @@ for i, year in enumerate(range(2014, 2025)):
 
 
 # onto ws2: yearly scores
-
+logging.debug("Creating worksheet 2")
 
 ws2 = workbook.add_worksheet("Regular Season Scores")
 # get points for and against dict
@@ -143,7 +145,7 @@ for i, year in enumerate(range(2014, 2025)):
 
 
 # ws3: h2h records
-
+logging.debug("Creating worksheet 3")
 ws3 = workbook.add_worksheet("Head to Head Record")
 # get points for and against dict
 h2h_records = fls.calculate_reg_records(df1)[0]
@@ -174,7 +176,7 @@ for i, p1 in enumerate(sorted_players):
 
 
 # ws4: h2h scores
-
+logging.debug("Creating worksheet 4")
 ws4 = workbook.add_worksheet("Head to Head Scores")
 # get points for and against dict
 h2h_scores = fls.calculate_reg_records(df1)[1]
@@ -207,7 +209,9 @@ for i, p1 in enumerate(sorted_players):
 
 
 # ws5: 25 highest #
-# decided to try doing this one with pandas
+# decided to try doing this one with pandas because am learning it now and better than dictionaries
+# (even though less comfortable for me)
+logging.debug("Creating worksheet 5")
 
 ws5 = workbook.add_worksheet('Highest Scores')
 ws5.set_column_pixels(0, 0, 70, fmt_center)
@@ -267,21 +271,15 @@ for i, p1 in enumerate(sorted_players, start=1):
     for rank, score_dict in enumerate(highest_scores, start=1):
         if score_dict['player'] == p1:
             rank_points += (26 - rank)
-        elif score_dict["opponent"] == p1:
-            rank_points -= (26-rank)
 
     ws5.write(i, 10, rank_points, fmt_center)
-
-
-
-
-
 
 # done
 
 ### ws6: 25 lowest
-ws6 = workbook.add_worksheet('Lowest Scores')
+logging.debug("Creating worksheet 6")
 
+ws6 = workbook.add_worksheet('Lowest Scores')
 
 lowest_scores = fls.find_extreme_scores(df1)[1]
 lowest_scores = lowest_scores[::-1]
@@ -341,47 +339,75 @@ for i, p1 in enumerate(sorted_players, start=1):
     ws6.write(i, 10, rank_points, fmt_center)
 # done
 
+### ws7: 25 largest victories
+logging.debug("Creating worksheet 7")
+ws7 = workbook.add_worksheet("Largest Victories")
 
-# ws7: made playoffs #
-ws7 = workbook.add_worksheet("Made Playoffs")
+largest_wins = fls.find_extreme_scores(df1)[4]
+
+df_largest_wins = pd.DataFrame(largest_wins)
+df_largest_wins['player'] = df_largest_wins['player'].map(name_mapping)
+df_largest_wins['opponent'] = df_largest_wins['opponent'].map(name_mapping)
+df_largest_wins = df_largest_wins[['margin', 'player', 'opponent', 'week', 'year']]
+df_largest_wins.columns = ['Margin', 'Player', 'Opponent', 'Week', 'Year']
+
+# make rank column
+df_largest_wins.insert(0, 'Rank', range(1, len(df_largest_wins) + 1))
+#  headers
+headers = ['Rank', 'Margin', 'Player', 'Opponent', 'Week', 'Year']
+for col, header in enumerate(headers):
+    ws7.write(0, col, header, fmt_bold)
+
+# write data
+for row_idx, score_dict in enumerate(largest_wins, start=1):
+    ws7.write(row_idx, 0, row_idx, fmt_bold)  # Rank
+    ws7.write(row_idx, 1, score_dict["margin"], fmt_center)
+    ws7.write(row_idx, 2, name_mapping[score_dict['player']], fmt_center)
+    ws7.write(row_idx, 3, name_mapping.get(score_dict['opponent'], 'N/A'), fmt_center)
+    # I have literally no idea why I wrote this as a regex but its funny so why not?
+    ws7_match = re.match(r'([^\d]+)(\d+)', score_dict['week'])
+    ws7.write(row_idx, 4, f"{ws7_match.group(1)} {ws7_match.group(2)}", fmt_normal)
+    # kind of tired of coding and having a brain fart couldn't remember a better way to do it
+    ws7.write(row_idx, 5, score_dict['year'], fmt_center)
+
+ws7.set_column_pixels(7, 10, 150, fmt_center)
+rankings_ws7_headers = ["Player", "Appearances", "Opponent Appearances", "Rank Points"]
+for i, header in enumerate(rankings_ws7_headers):
+    ws7.write(0, i + 7, header, fmt_bold)
+
+# count appearances for each player across all largest margins of vitory
+player_appearance_count = {player: 0 for player in sorted_players}
+opponent_appearance_count = {player: 0 for player in sorted_players}
+
+for score_dict in largest_wins:
+    player_appearance_count[score_dict['player']] += 1
+    opponent_appearance_count[score_dict['opponent']] += 1
+
+# write the rankings data for each player
+for i, player in enumerate(sorted_players, start=1):
+    ws7.write(i, 7, name_mapping[p1], fmt_bold)
+    ws7.write(i, 8, player_appearance_count[p1], fmt_center)
+    ws7.write(i, 9, opponent_appearance_count[p1], fmt_center)
+
+    # calculate rank points
+    # want the fewest (25 points for 1st place, 24 for 2nd, etc.), lose 25 for being opponent for first, etc
+    rank_points = 0
+    for rank, score_dict in enumerate(largest_wins, start=1):
+        if score_dict["player"] == player:
+            rank_points += (26 - rank)  # 25 for 1st, 24 for 2nd, etc.
+        if score_dict["opponent"] == player:
+            rank_points -= (26 - rank)
+    ws7.write(i, 10, rank_points, fmt_center)
+# done
+
+
+# ws8: made playoffs #
+logging.debug("Creating worksheet 8")
+
+ws8 = workbook.add_worksheet("Made Playoffs")
 made_playoffs_dict = fls.calculate_playoff_makes_misses(df1)[0]
+year_postseason_outlook = fls.calculate_playoff_makes_misses(df1)[3]
 made_playoffs_list = {player:[] for player in players}
-
-ws7.set_column_pixels(0, 0, 90, fmt_center)
-for i in range(1, len(sorted_players) + 1):
-    ws7.set_column_pixels(i, i, 90, fmt_center)
-for i in range(12):  # 11 years + header
-    ws7.set_row_pixels(i, 24, fmt_center)
-
-# write headers
-ws7.write(0, 0, "Year", fmt_bold)
-for i, name in enumerate(mapped_names):
-    ws7.write(0, i + 1, name, fmt_bold)
-
-# write year labels and records
-for i, year in enumerate(range(2014, 2025)):
-    ws7.write(i + 1, 0, year, fmt_bold)
-    for j, player in enumerate(sorted_players):
-        if year in made_playoffs_dict[player]:
-            ws7.write(i + 1, j + 1, str(made_playoffs_dict[player][year]), fmt_normal)
-            made_playoffs_list[player].append(made_playoffs_dict[player][year])
-        else:
-            ws7.write(i + 1, j + 1, "", fmt_black)
-
-ws7.write(12,0,"Total", fmt_bold)
-for j, player in enumerate(sorted_players):
-    ws7.write(12, j+1, f"{Counter(made_playoffs_list[player])[True]} / {len(made_playoffs_list[player])}")
-
-
-
-
-
-
-# ws8: made Loser's bowl #
-
-ws8 = workbook.add_worksheet("Made Losers Bowl")
-made_losers_dict = fls.calculate_playoff_makes_misses(df1)[2]
-made_losers_list = {player: [] for player in sorted_players}
 
 ws8.set_column_pixels(0, 0, 90, fmt_center)
 for i in range(1, len(sorted_players) + 1):
@@ -398,21 +424,32 @@ for i, name in enumerate(mapped_names):
 for i, year in enumerate(range(2014, 2025)):
     ws8.write(i + 1, 0, year, fmt_bold)
     for j, player in enumerate(sorted_players):
-        if year in made_losers_dict[player]:
-            ws8.write(i + 1, j + 1, str(made_losers_dict[player][year]), fmt_normal)
-            made_losers_list[player].append(made_losers_dict[player][year])
+        if player in year_postseason_outlook[year][0]:
+            ws8.write(i + 1, j + 1, str(made_playoffs_dict[player][year]), fmt_bold)
+            made_playoffs_list[player].append(made_playoffs_dict[player][year])
+        elif player in year_postseason_outlook[year][1] or player in year_postseason_outlook[year][2]:
+            ws8.write(i + 1, j + 1, str(made_playoffs_dict[player][year]), fmt_normal)
         else:
             ws8.write(i + 1, j + 1, "", fmt_black)
+    ws8.write(i + 1, 11, len(year_postseason_outlook[year][0]), fmt_bold)
+
 ws8.write(12,0,"Total", fmt_bold)
 for j, player in enumerate(sorted_players):
-    ws8.write(12, j+1, f"{Counter(made_losers_list[player])[True]} / {len(made_losers_dict[player])}")
+    num_seasons = 11
+    if player == "Rockmael" or player == "Jackson":
+        num_seasons = 9
+    ws8.write(12, j+1, f"{Counter(made_playoffs_list[player])[True]} / {num_seasons}")
+ws8.write(0, 11, "Check", fmt_bold)
+
+# done
 
 
-# ws9 avg regular season finish #
+# ws9: made Loser's bowl #
+logging.debug("Creating worksheet 9")
 
-ws9 = workbook.add_worksheet("Average Regular Season Finish")
-standings_dictionary = fls.create_standings(df1)
-list_of_reg_finishes = {player: [] for player in players}
+ws9 = workbook.add_worksheet("Made Losers Bowl")
+made_losers_dict = fls.calculate_playoff_makes_misses(df1)[2]
+made_losers_list = {player: [] for player in sorted_players}
 
 ws9.set_column_pixels(0, 0, 90, fmt_center)
 for i in range(1, len(sorted_players) + 1):
@@ -425,30 +462,34 @@ ws9.write(0, 0, "Year", fmt_bold)
 for i, name in enumerate(mapped_names):
     ws9.write(0, i + 1, name, fmt_bold)
 
-ws9.write(12, 0, "Average", fmt_bold)
-ws9.write(13, 0, "Most Common", fmt_bold)
-
 # write year labels and records
 for i, year in enumerate(range(2014, 2025)):
     ws9.write(i + 1, 0, year, fmt_bold)
     for j, player in enumerate(sorted_players):
-        if player in standings_dictionary[year]:
-            ws9.write(i + 1, j + 1, str(standings_dictionary[year][player]["RegularSeasonRank"]), fmt_normal)
-            list_of_reg_finishes[player].append(standings_dictionary[year][player]["RegularSeasonRank"])
+        if player in year_postseason_outlook[year][2]:
+            ws9.write(i + 1, j + 1, str(made_losers_dict[player][year]), fmt_bold)
+            made_losers_list[player].append(made_losers_dict[player][year])
+        elif (player in year_postseason_outlook[year][1]) or (player in year_postseason_outlook[year][0]):
+            ws9.write(i + 1, j + 1, str(made_losers_dict[player][year]), fmt_normal)
         else:
             ws9.write(i + 1, j + 1, "", fmt_black)
+    ws9.write(i + 1, 11, len(year_postseason_outlook[year][2]), fmt_bold)
 
+ws9.write(12,0,"Total", fmt_bold)
 for j, player in enumerate(sorted_players):
-    ws9.write(12, j + 1, round(sum(list_of_reg_finishes[player])/ len(list_of_reg_finishes[player]), 2),fmt_bold)
-    ws9.write(13, j + 1, Counter(list_of_reg_finishes[player]).most_common(1)[0][0], fmt_bold)
+    num_seasons = 11
+    if player == "Rockmael" or player == "Jackson":
+        num_seasons = 9
+    ws9.write(12, j+1, f"{Counter(made_losers_list[player])[True]} / {num_seasons}")
+ws9.write(0, 11, "Check", fmt_bold)
 
-# done
 
+# ws10 avg regular season finish #
+logging.debug("Creating worksheet 10")
 
-# ws10 avg final standings finish #
-ws10 = workbook.add_worksheet("Average Final Finish")
+ws10 = workbook.add_worksheet("Average Regular Season Finish")
 standings_dictionary = fls.create_standings(df1)
-list_of_final_finishes = {player: [] for player in players}
+list_of_reg_finishes = {player: [] for player in players}
 
 ws10.set_column_pixels(0, 0, 90, fmt_center)
 for i in range(1, len(sorted_players) + 1):
@@ -469,16 +510,55 @@ for i, year in enumerate(range(2014, 2025)):
     ws10.write(i + 1, 0, year, fmt_bold)
     for j, player in enumerate(sorted_players):
         if player in standings_dictionary[year]:
-            ws10.write(i + 1, j + 1, str(standings_dictionary[year][player]["PlayoffRank"]), fmt_normal)
-            list_of_final_finishes[player].append(standings_dictionary[year][player]["PlayoffRank"])
+            ws10.write(i + 1, j + 1, str(standings_dictionary[year][player]["RegularSeasonRank"]), fmt_normal)
+            list_of_reg_finishes[player].append(standings_dictionary[year][player]["RegularSeasonRank"])
         else:
             ws10.write(i + 1, j + 1, "", fmt_black)
 
 for j, player in enumerate(sorted_players):
-    ws10.write(12, j + 1, round(sum(list_of_final_finishes[player])/ len(list_of_final_finishes[player]), 2),fmt_bold)
-    ws10.write(13, j + 1, Counter(list_of_final_finishes[player]).most_common(1)[0][0], fmt_bold)
+    ws10.write(12, j + 1, round(sum(list_of_reg_finishes[player])/ len(list_of_reg_finishes[player]), 2),fmt_bold)
+    ws10.write(13, j + 1, Counter(list_of_reg_finishes[player]).most_common(1)[0][0], fmt_bold)
+
+# done
+
+
+# ws11 avg final standings finish #
+logging.debug("Creating worksheet 11")
+
+ws11 = workbook.add_worksheet("Average Final Finish")
+standings_dictionary = fls.create_standings(df1)
+list_of_final_finishes = {player: [] for player in players}
+
+ws11.set_column_pixels(0, 0, 90, fmt_center)
+for i in range(1, len(sorted_players) + 1):
+    ws11.set_column_pixels(i, i, 90, fmt_center)
+for i in range(12):  # 11 years + header
+    ws11.set_row_pixels(i, 24, fmt_center)
+
+# write headers
+ws11.write(0, 0, "Year", fmt_bold)
+for i, name in enumerate(mapped_names):
+    ws11.write(0, i + 1, name, fmt_bold)
+
+ws11.write(12, 0, "Average", fmt_bold)
+ws11.write(13, 0, "Most Common", fmt_bold)
+
+# write year labels and records
+for i, year in enumerate(range(2014, 2025)):
+    ws11.write(i + 1, 0, year, fmt_bold)
+    for j, player in enumerate(sorted_players):
+        if player in standings_dictionary[year]:
+            ws11.write(i + 1, j + 1, str(standings_dictionary[year][player]["PlayoffRank"]), fmt_normal)
+            list_of_final_finishes[player].append(standings_dictionary[year][player]["PlayoffRank"])
+        else:
+            ws11.write(i + 1, j + 1, "", fmt_black)
+
+for j, player in enumerate(sorted_players):
+    ws11.write(12, j + 1, round(sum(list_of_final_finishes[player])/ len(list_of_final_finishes[player]), 2),fmt_bold)
+    ws11.write(13, j + 1, Counter(list_of_final_finishes[player]).most_common(1)[0][0], fmt_bold)
 
 
 # done!
 
 workbook.close()
+
