@@ -216,7 +216,7 @@ def create_standings(df):
 
     # create pd df for csv for that year's standings
         standings_csv = pd.read_csv(os.path.join(
-                r"C:\Users\aaron\PycharmProjects\oct25_fantasy_stats_with_scraping\output\2457715-history-standings",
+                r"C:\Users\...\output\2457715-history-standings",
                 f"{year}.csv"))
         for _, row in standings_csv.iterrows(): # don't actually need index
             manager = row["ManagerName"]
