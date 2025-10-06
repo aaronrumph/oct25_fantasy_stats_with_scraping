@@ -385,9 +385,9 @@ for score_dict in largest_wins:
 
 # write the rankings data for each player
 for i, player in enumerate(sorted_players, start=1):
-    ws7.write(i, 7, name_mapping[p1], fmt_bold)
-    ws7.write(i, 8, player_appearance_count[p1], fmt_center)
-    ws7.write(i, 9, opponent_appearance_count[p1], fmt_center)
+    ws7.write(i, 7, name_mapping[player], fmt_bold)
+    ws7.write(i, 8, player_appearance_count[player], fmt_center)
+    ws7.write(i, 9, opponent_appearance_count[player], fmt_center)
 
     # calculate rank points
     # want the fewest (25 points for 1st place, 24 for 2nd, etc.), lose 25 for being opponent for first, etc
