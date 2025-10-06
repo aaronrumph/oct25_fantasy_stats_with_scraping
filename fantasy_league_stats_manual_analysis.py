@@ -226,7 +226,6 @@ def create_standings(df):
 
         #!!!# the kevin contingency!!!#
             elif manager == "Kevin" and year < 2016: # before 2016 it could only be K Saxe
-                print("EASY KEVIN MATCH")
                 for field in standings_csv.columns.tolist():
                     standings_dictionary[year]["Saxe"][field] = row[field]
 
@@ -379,6 +378,7 @@ def calculate_reg_averages(df):
     avg_score_career = {player: [0,0] for player in players}
     total_games = {player: 0 for player in players}
     avg_score_h2h = {player: {} for player in players}
+    total_score = {player: {year: [0,0] for year in league_set_up} for player in players}
 
     for player in players:
         total_points_for = round(sum(h2h_scores[player][opp][0] for opp in h2h_scores[player]),2)
@@ -403,15 +403,12 @@ def calculate_reg_averages(df):
             for week in extracted_reg[0][player][year]:
                 running_count_for += extracted_reg[0][player][year][week]
                 running_count_against += extracted_reg[0][extracted_reg[1][player][year][week]][year][week]
+            total_score[player][year][0] = round(running_count_for, 2)
+            total_score[player][year][1] = round(running_count_against,2)
             avg_score_season[player][year][0] = round(running_count_for/league_set_up[year]["reg_season_weeks"], 2)
             avg_score_season[player][year][1] = round(running_count_against/league_set_up[year]["reg_season_weeks"], 2)
 
-    return avg_score_h2h, avg_score_season, avg_score_career, total_games
-
-print(calculate_reg_averages(fantasy_df))
-
-
-
+    return avg_score_h2h, avg_score_season, avg_score_career, total_games, total_score
 
 def find_extreme_scores(df):
     # twenty_five_highest_scores_overall, twenty_five_lowest_scores_overall in form: [{"score": score,"player": player,"opponent": opponent, "week": week,"year": year},...]
@@ -462,34 +459,5 @@ def find_extreme_scores(df):
 
     return twenty_five_highest_scores_overall, twenty_five_lowest_scores_overall, ten_highest_playoff_scores, ten_lowest_playoff_scores, player_outlier_scores
 
-print(find_extreme_scores(fantasy_df)[4]["Aaron"])
-print(extract_postseason_matchup_data(fantasy_df)[0]["Oliver"][2024]["Week17"])
-
 # !! # COMPLETE UNTIL HERE # !! #
-
-
-# create workbook #
-workbook = xlsxwriter.Workbook("fantasy_league_stats_new_output.xlsx")
-# formatting #
-fmt_black = workbook.add_format({'bg_color': '#000000', 'font_color': '#000000'})
-fmt_center = workbook.add_format({'align': 'center', 'valign': 'vcenter'})
-# making it so displays presentable names instead of database names (Kevin R instead of Rockmael) #
-sorted_players = sorted(players)
-mapped_names = [name_mapping[player] for player in sorted_players]
-
-# sheet 1: overall record #
-
-# formatting
-ws1 = workbook.add_worksheet("Record by Year")
-ws1.set_column_pixels(0, 15, 48, fmt_center)
-for i in range(15):
-    ws1.set_row_pixels(i, 24, fmt_center)
-
-for i, name in enumerate(mapped_names):
-    ws1.write(0, i + 1, name)
-
-for i, year in enumerate(range(2014, 2025)):
-    ws1.write(i + 1, 0, f"{year}")
-
-workbook.close()
 
