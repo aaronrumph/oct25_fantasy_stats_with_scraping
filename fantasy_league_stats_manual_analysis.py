@@ -52,7 +52,6 @@ def get_year_rows(year, df):
     num_matchups = league_set_up[year]["teams"] // 2  # number of matchups per week = no. players/2
     return list(range(year_index, year_index + num_matchups)) # returns list of indices for the rows that make up the season
 
-
 def extract_reg_matchup_data(df):
     player_scores_dict = {player: {} for player in players}
     player_opponents_dict = {player: {} for player in players}
@@ -135,8 +134,6 @@ def extract_postseason_matchup_data(df):
                     player_opponents_dict[player][year][f"Week{week}"] = "NA"
     return player_scores_dict, player_opponents_dict
 
-
-
 def calculate_reg_records(df):
     # returns a list of dictionaries: [h2h_records, h2h_scores, yearly_records, weekly_records]
     # h2h_records format {player:{opponent:[W,L,T]}}
@@ -216,7 +213,7 @@ def create_standings(df):
 
     # create pd df for csv for that year's standings
         standings_csv = pd.read_csv(os.path.join(
-                r"C:\Users\...\output\2457715-history-standings",
+                r"C:\Users\aaron\PycharmProjects\oct25_fantasy_stats_with_scraping\output\2457715-history-standings",
                 f"{year}.csv"))
         for _, row in standings_csv.iterrows(): # don't actually need index
             manager = row["ManagerName"]

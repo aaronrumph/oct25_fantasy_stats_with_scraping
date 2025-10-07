@@ -15,7 +15,7 @@ from numpy.ma.extras import average
 # important that all functions, etc.
 # from fantasy_league_stats... should be prexifixed with fls.
 import fantasy_league_stats_manual_analysis as fls
-from fantasy_league_stats_manual_analysis import name_mapping, players
+from fantasy_league_stats_manual_analysis import name_mapping, players, league_set_up
 
 # now onto visualizing in Excel:
 # Wwat to visualize:
@@ -253,18 +253,18 @@ for i, header in enumerate(rankings_ws5_headers):
     ws5.write(0, i + 7, header, fmt_bold)
 
 # count appearances for each player across all highest scores
-player_appearance_count = {player: 0 for player in sorted_players}
-opponent_appearance_count = {player: 0 for player in sorted_players}
+player_appearance_count_highest_scores = {player: 0 for player in sorted_players}
+opponent_appearance_count_highest_scores = {player: 0 for player in sorted_players}
 
 for score_dict in highest_scores:
-    player_appearance_count[score_dict['player']] += 1
-    opponent_appearance_count[score_dict['opponent']] += 1
+    player_appearance_count_highest_scores[score_dict['player']] += 1
+    opponent_appearance_count_highest_scores[score_dict['opponent']] += 1
 
 # write the rankings data for each player
 for i, p1 in enumerate(sorted_players, start=1):
     ws5.write(i, 7, name_mapping[p1], fmt_bold)
-    ws5.write(i, 8, player_appearance_count[p1], fmt_center)
-    ws5.write(i, 9, opponent_appearance_count[p1], fmt_center)
+    ws5.write(i, 8, player_appearance_count_highest_scores[p1], fmt_center)
+    ws5.write(i, 9, opponent_appearance_count_highest_scores[p1], fmt_center)
 
     # calculate rank points (25 points for 1st place, 24 for 2nd, etc.), subtract if opponent of high_score
     rank_points = 0
@@ -309,24 +309,24 @@ for row_idx, score_dict in enumerate(lowest_scores, start=1):
     # kind of tired of coding and having a brain fart couldn't remember a better way to do it
     ws6.write(row_idx, 5, score_dict['year'], fmt_center)
 
-ws6.set_column_pixels(7, 10, 150, fmt_center)
+ws6.set_column_pixels(7, 9, 150, fmt_center)
 rankings_ws6_headers = ["Player", "Appearances", "Opponent Appearances", "Rank Points"]
 for i, header in enumerate(rankings_ws6_headers):
     ws6.write(0, i + 7, header, fmt_bold)
 
 # count appearances for each player across all lowest scores
-player_appearance_count = {player: 0 for player in sorted_players}
-opponent_appearance_count = {player: 0 for player in sorted_players}
+player_appearance_count_lowest_scores = {player: 0 for player in sorted_players}
+opponent_appearance_count_lowest_scores = {player: 0 for player in sorted_players}
 
 for score_dict in lowest_scores:
-    player_appearance_count[score_dict['player']] += 1
-    opponent_appearance_count[score_dict['opponent']] += 1
+    player_appearance_count_lowest_scores[score_dict['player']] += 1
+    opponent_appearance_count_lowest_scores[score_dict['opponent']] += 1
 
 # write the rankings data for each player
 for i, p1 in enumerate(sorted_players, start=1):
     ws6.write(i, 7, name_mapping[p1], fmt_bold)
-    ws6.write(i, 8, player_appearance_count[p1], fmt_center)
-    ws6.write(i, 9, opponent_appearance_count[p1], fmt_center)
+    ws6.write(i, 8, player_appearance_count_lowest_scores[p1], fmt_center)
+    ws6.write(i, 9, opponent_appearance_count_lowest_scores[p1], fmt_center)
 
     # calculate rank points
     # want the fewest (25 points for 1st place, 24 for 2nd, etc.), lose 25 for being opponent for first, etc
@@ -342,6 +342,8 @@ for i, p1 in enumerate(sorted_players, start=1):
 ### ws7: 25 largest victories
 logging.debug("Creating worksheet 7")
 ws7 = workbook.add_worksheet("Largest Victories")
+reg_season_score_dict = fls.extract_reg_matchup_data(df1)[0]
+postseason_score_dict = fls.extract_postseason_matchup_data(df1)[0]
 
 largest_wins = fls.find_extreme_scores(df1)[4]
 
@@ -354,7 +356,7 @@ df_largest_wins.columns = ['Margin', 'Player', 'Opponent', 'Week', 'Year']
 # make rank column
 df_largest_wins.insert(0, 'Rank', range(1, len(df_largest_wins) + 1))
 #  headers
-headers = ['Rank', 'Margin', 'Player', 'Opponent', 'Week', 'Year']
+headers = ['Rank', 'Margin', 'Player', "Score", 'Opponent', "Score", 'Week', 'Year']
 for col, header in enumerate(headers):
     ws7.write(0, col, header, fmt_bold)
 
@@ -363,31 +365,39 @@ for row_idx, score_dict in enumerate(largest_wins, start=1):
     ws7.write(row_idx, 0, row_idx, fmt_bold)  # Rank
     ws7.write(row_idx, 1, score_dict["margin"], fmt_center)
     ws7.write(row_idx, 2, name_mapping[score_dict['player']], fmt_center)
-    ws7.write(row_idx, 3, name_mapping.get(score_dict['opponent'], 'N/A'), fmt_center)
+    ws7.write(row_idx, 4, name_mapping.get(score_dict['opponent'], 'N/A'), fmt_center)
     # I have literally no idea why I wrote this as a regex but its funny so why not?
     ws7_match = re.match(r'([^\d]+)(\d+)', score_dict['week'])
-    ws7.write(row_idx, 4, f"{ws7_match.group(1)} {ws7_match.group(2)}", fmt_normal)
+    if int(ws7_match.group(2)) > fls.league_set_up[score_dict["year"]]["reg_season_weeks"]:
+        ws7.write(row_idx, 3, postseason_score_dict[score_dict["player"]][score_dict["year"]][score_dict["week"]])
+        ws7.write(row_idx, 5, postseason_score_dict[score_dict["opponent"]][score_dict["year"]][score_dict["week"]])
+    elif int(ws7_match.group(2)) <= fls.league_set_up[score_dict["year"]]["reg_season_weeks"]:
+        ws7.write(row_idx, 3, reg_season_score_dict[score_dict["player"]][score_dict["year"]][score_dict["week"]])
+        ws7.write(row_idx, 5, reg_season_score_dict[score_dict["opponent"]][score_dict["year"]][score_dict["week"]])
+    else:
+        logging.debug("Something is broken")
+    ws7.write(row_idx, 6, f"{ws7_match.group(1)} {ws7_match.group(2)}", fmt_normal)
     # kind of tired of coding and having a brain fart couldn't remember a better way to do it
-    ws7.write(row_idx, 5, score_dict['year'], fmt_center)
+    ws7.write(row_idx, 7, score_dict['year'], fmt_center)
 
-ws7.set_column_pixels(7, 10, 150, fmt_center)
+ws7.set_column_pixels(9, 12, 150, fmt_center)
 rankings_ws7_headers = ["Player", "Appearances", "Opponent Appearances", "Rank Points"]
 for i, header in enumerate(rankings_ws7_headers):
-    ws7.write(0, i + 7, header, fmt_bold)
+    ws7.write(0, i + 9, header, fmt_bold)
 
 # count appearances for each player across all largest margins of vitory
-player_appearance_count = {player: 0 for player in sorted_players}
-opponent_appearance_count = {player: 0 for player in sorted_players}
+player_appearance_count_largest_wins = {player: 0 for player in sorted_players}
+opponent_appearance_count_largest_wins = {player: 0 for player in sorted_players}
 
 for score_dict in largest_wins:
-    player_appearance_count[score_dict['player']] += 1
-    opponent_appearance_count[score_dict['opponent']] += 1
+    player_appearance_count_largest_wins[score_dict['player']] += 1
+    opponent_appearance_count_largest_wins[score_dict['opponent']] += 1
 
 # write the rankings data for each player
 for i, player in enumerate(sorted_players, start=1):
-    ws7.write(i, 7, name_mapping[player], fmt_bold)
-    ws7.write(i, 8, player_appearance_count[player], fmt_center)
-    ws7.write(i, 9, opponent_appearance_count[player], fmt_center)
+    ws7.write(i, 9, name_mapping[player], fmt_bold)
+    ws7.write(i, 10, player_appearance_count_largest_wins[player], fmt_center)
+    ws7.write(i, 11, opponent_appearance_count_largest_wins[player], fmt_center)
 
     # calculate rank points
     # want the fewest (25 points for 1st place, 24 for 2nd, etc.), lose 25 for being opponent for first, etc
@@ -397,7 +407,7 @@ for i, player in enumerate(sorted_players, start=1):
             rank_points += (26 - rank)  # 25 for 1st, 24 for 2nd, etc.
         if score_dict["opponent"] == player:
             rank_points -= (26 - rank)
-    ws7.write(i, 10, rank_points, fmt_center)
+    ws7.write(i, 12, rank_points, fmt_center)
 # done
 
 
