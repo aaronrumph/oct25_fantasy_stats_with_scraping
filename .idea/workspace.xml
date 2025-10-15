@@ -4,14 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="fb2f7418-df0e-4c0a-bdd6-d4a00b336bb9" name="Changes" comment="Done with FLS!">
-      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_10_6_2025_4_51_PM_[Changes]/shelved.patch" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_10_6_2025_4_51_PM__Changes_.xml" beforeDir="false" />
+    <list default="true" id="fb2f7418-df0e-4c0a-bdd6-d4a00b336bb9" name="Changes" comment="Updated everything for v2.0 of pt 1: basic stats analysis">
+      <change afterPath="$PROJECT_DIR$/fantasy_league_roster_analysis.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/basic_stats_output.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/basic_stats_output.xlsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/excel_output_manual_analysis.py" beforeDir="false" afterPath="$PROJECT_DIR$/excel_output_manual_analysis.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fantasy_league_stats_.xlsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fantasy_league_stats_manual_analysis.py" beforeDir="false" afterPath="$PROJECT_DIR$/fantasy_league_stats_manual_analysis.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -51,7 +46,8 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
-    "Python.excel_output_manual_analysis.executor": "Debug",
+    "Python.excel_output_manual_analysis.executor": "Run",
+    "Python.fantasy_league_roster_analysis.executor": "Run",
     "Python.fantasy_league_stats_manual_analysis.executor": "Run",
     "Python.scrape_standings.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
@@ -129,7 +125,15 @@
       <option name="project" value="LOCAL" />
       <updated>1759787519911</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="Updated everything for v2.0 of pt 1: basic stats analysis">
+      <option name="closed" value="true" />
+      <created>1759802964170</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1759802964170</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -149,6 +153,7 @@
     <MESSAGE value="Baically done with manual analysis module, just doing excel output now. Plus minor bug fixes" />
     <MESSAGE value="Done with FLS!" />
     <MESSAGE value="Updated everything for basic stats analysis" />
-    <option name="LAST_COMMIT_MESSAGE" value="Updated everything for basic stats analysis" />
+    <MESSAGE value="Updated everything for v2.0 of pt 1: basic stats analysis" />
+    <option name="LAST_COMMIT_MESSAGE" value="Updated everything for v2.0 of pt 1: basic stats analysis" />
   </component>
 </project>
